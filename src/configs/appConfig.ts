@@ -44,7 +44,7 @@ export const appSettings = {
   deployment: {
     // Base path for GitHub Pages deployment
     // Set this to the name of your GitHub repository
-    basePath: '/https://churros22.github.io/sheetguard-navigator/',
+    basePath: '/sheetguard-navigator/',
     
     // Flag to indicate if the app is running in production
     isProduction: process.env.NODE_ENV === 'production'
