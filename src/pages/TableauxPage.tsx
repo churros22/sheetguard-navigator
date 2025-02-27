@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart3, ChevronDown, Loader2, Search, SlidersHorizontal, XCircle } from "lucide-react";
+import { BarChart3, Loader2, Search, XCircle } from "lucide-react";
 import { fetchSheetData } from "@/utils/googleSheetsUtils";
 import { googleSheetsConfig } from "@/configs/appConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,20 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Tableau {
   id: string;
@@ -36,9 +34,8 @@ const TableauxPage = () => {
   const [tableaux, setTableaux] = useState<Tableau[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedTableau, setSelectedTableau] = useState<Tableau | null>(null);
+  const [selectedSort, setSelectedSort] = useState<"name" | "category">("category");
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const { toast } = useToast();
   
   // Fetch tableaux on load
@@ -53,9 +50,13 @@ const TableauxPage = () => {
         });
         setTableaux(data);
         
-        // Get all categories
-        const categories = [...new Set(data.map(t => t.category))];
-        setSelectedCategories(categories);
+        // Expand first category by default
+        if (data.length > 0) {
+          const categories = [...new Set(data.map(d => d.category))];
+          if (categories.length > 0) {
+            setExpandedCategories([categories[0]]);
+          }
+        }
       } catch (error) {
         console.error("Error fetching tableaux:", error);
         toast({
@@ -71,25 +72,37 @@ const TableauxPage = () => {
     fetchTableaux();
   }, [toast]);
   
-  // Get all categories
-  const allCategories = [...new Set(tableaux.map(t => t.category))];
-  
-  // Filter tableaux based on search term and selected categories
+  // Filter tableaux based on search term
   const filteredTableaux = tableaux.filter(tableau => 
-    (tableau.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     tableau.category.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    selectedCategories.includes(tableau.category)
+    tableau.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    tableau.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   // Sort tableaux
   const sortedTableaux = [...filteredTableaux].sort((a, b) => {
-    const comparison = a.name.localeCompare(b.name);
-    return sortOrder === "asc" ? comparison : -comparison;
+    if (selectedSort === "name") {
+      return a.name.localeCompare(b.name);
+    } else {
+      return a.category.localeCompare(b.category) || a.name.localeCompare(b.name);
+    }
   });
   
-  // Toggle sort order
-  const toggleSortOrder = () => {
-    setSortOrder(prev => prev === "asc" ? "desc" : "asc");
+  // Group tableaux by category
+  const groupedTableaux = sortedTableaux.reduce((acc, tableau) => {
+    if (!acc[tableau.category]) {
+      acc[tableau.category] = [];
+    }
+    acc[tableau.category].push(tableau);
+    return acc;
+  }, {} as { [key: string]: Tableau[] });
+  
+  // Toggle category expansion
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => 
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
   };
   
   // Open tableau in new tab
@@ -100,35 +113,6 @@ const TableauxPage = () => {
   // Clear search
   const clearSearch = () => {
     setSearchTerm("");
-  };
-  
-  // Toggle category filter
-  const toggleCategoryFilter = (category: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
-  
-  // Select all categories
-  const selectAllCategories = () => {
-    setSelectedCategories(allCategories);
-  };
-  
-  // Clear all category selections
-  const clearAllCategories = () => {
-    setSelectedCategories([]);
-  };
-  
-  // View tableau details
-  const viewTableauDetails = (tableau: Tableau) => {
-    setSelectedTableau(tableau);
-  };
-  
-  // Close tableau details
-  const closeTableauDetails = () => {
-    setSelectedTableau(null);
   };
   
   return (
@@ -143,12 +127,12 @@ const TableauxPage = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tableaux</h1>
           <p className="text-muted-foreground">
-            View and analyze data tables and visualizations
+            Access data visualizations and analysis tools
           </p>
         </div>
         
-        {/* Search and Filter Bar */}
-        <div className="flex flex-col gap-4 sm:flex-row">
+        {/* Search and Sort Bar */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -169,56 +153,19 @@ const TableauxPage = () => {
             )}
           </div>
           
-          <div className="flex gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Filter
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                
-                <div className="max-h-[300px] overflow-auto">
-                  {allCategories.map(category => (
-                    <DropdownMenuCheckboxItem
-                      key={category}
-                      checked={selectedCategories.includes(category)}
-                      onCheckedChange={() => toggleCategoryFilter(category)}
-                    >
-                      {category}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </div>
-                
-                <DropdownMenuSeparator />
-                <div className="flex justify-between p-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-xs"
-                    onClick={selectAllCategories}
-                  >
-                    Select All
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-xs"
-                    onClick={clearAllCategories}
-                  >
-                    Clear All
-                  </Button>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <Button variant="outline" onClick={toggleSortOrder} className="gap-2">
-              Sort {sortOrder === "asc" ? "A-Z" : "Z-A"}
-              <ChevronDown className={`h-4 w-4 transition-transform ${sortOrder === "desc" ? "rotate-180" : ""}`} />
-            </Button>
+          <div className="w-full sm:w-40">
+            <Select
+              value={selectedSort}
+              onValueChange={(value) => setSelectedSort(value as "name" | "category")}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Sort by Name</SelectItem>
+                <SelectItem value="category">Sort by Category</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         
@@ -230,17 +177,15 @@ const TableauxPage = () => {
         )}
         
         {/* No Results */}
-        {!loading && sortedTableaux.length === 0 && (
+        {!loading && filteredTableaux.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <XCircle className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold">No tableaux found</h3>
-              <p className="text-muted-foreground text-center max-w-md">
+              <p className="text-muted-foreground">
                 {searchTerm 
-                  ? "Try a different search term or adjust your filters"
-                  : selectedCategories.length === 0
-                    ? "Please select at least one category"
-                    : "No tableaux are available in the system"
+                  ? "Try a different search term or clear your search"
+                  : "No tableaux are available in the system"
                 }
               </p>
               {searchTerm && (
@@ -252,99 +197,61 @@ const TableauxPage = () => {
                   Clear Search
                 </Button>
               )}
-              {selectedCategories.length === 0 && (
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={selectAllCategories}
-                >
-                  Select All Categories
-                </Button>
-              )}
             </CardContent>
           </Card>
         )}
         
-        {/* Tableaux Grid */}
-        {!loading && sortedTableaux.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedTableaux.map((tableau) => (
-              <Card key={tableau.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <div
-                  className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center cursor-pointer"
-                  onClick={() => viewTableauDetails(tableau)}
-                >
-                  <BarChart3 className="h-12 w-12 text-primary/60" />
-                </div>
-                <CardHeader className="p-4">
-                  <div className="flex justify-between items-start gap-2">
-                    <CardTitle className="text-lg">{tableau.name}</CardTitle>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{tableau.category}</p>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="flex justify-between mt-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-xs"
-                      onClick={() => viewTableauDetails(tableau)}
-                    >
-                      View Details
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openTableau(tableau)}
-                      className="text-xs"
-                    >
-                      Open
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        {/* Tableaux List */}
+        {!loading && filteredTableaux.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Tableaux</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="multiple" value={expandedCategories}>
+                {Object.entries(groupedTableaux).map(([category, tableaux]) => (
+                  <AccordionItem key={category} value={category}>
+                    <AccordionTrigger onClick={() => toggleCategory(category)}>
+                      <div className="flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        <span>{category}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          ({tableaux.length})
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="grid gap-2 py-2"
+                      >
+                        {tableaux.map((tableau) => (
+                          <div
+                            key={tableau.id}
+                            onClick={() => openTableau(tableau)}
+                            className="flex items-center gap-3 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer"
+                          >
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <BarChart3 className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">{tableau.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Click to open
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </motion.div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
         )}
-        
-        {/* Tableau Details Dialog */}
-        <Dialog open={!!selectedTableau} onOpenChange={closeTableauDetails}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{selectedTableau?.name}</DialogTitle>
-              <DialogDescription>
-                {selectedTableau?.category}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <div className="flex justify-center mb-4">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <BarChart3 className="h-8 w-8 text-primary" />
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium">Type</h4>
-                  <p className="text-sm text-muted-foreground capitalize">
-                    {selectedTableau?.type.replace('-', ' ')}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium">Description</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Detailed visualization for data analysis and reporting. Click the button below to open.
-                  </p>
-                </div>
-                <Button 
-                  className="w-full" 
-                  onClick={() => selectedTableau && openTableau(selectedTableau)}
-                >
-                  Open in New Tab
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </motion.div>
     </AnimatePresence>
   );

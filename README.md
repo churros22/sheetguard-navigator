@@ -1,69 +1,183 @@
-# Welcome to your Lovable project
 
-## Project info
+# CBE#4-Process Validation Application
 
-**URL**: https://lovable.dev/projects/28adb778-eb00-4f74-9296-f5c683a48e66
+A modern React application for managing process validation data, documents, and diagrams.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Secure authentication with password protection
+- Interactive dashboard with CRUD operations
+- Document library with filtering and search
+- Diagrammes viewer with categorization
+- Data visualization with charts and tables
+- Responsive design that works on all devices
+- Dark/light mode toggle
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/28adb778-eb00-4f74-9296-f5c683a48e66) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js (v14.0 or higher)
+- npm (v6.0 or higher)
 
-**Use your preferred IDE**
+### Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/cbe4-process-validation.git
+   cd cbe4-process-validation
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. Install dependencies:
+   ```
+   npm install
+   ```
 
-Follow these steps:
+3. Start the development server:
+   ```
+   npm run dev
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. Open your browser to:
+   ```
+   http://localhost:5173
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Configuration
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Google Sheets API Setup
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Navigate to "APIs & Services" > "Library"
+4. Search for and enable the "Google Sheets API"
+5. Go to "APIs & Services" > "Credentials"
+6. Create an API key (restrict it to Google Sheets API only for security)
+7. Copy the API key
+
+### Configuring the Application
+
+1. Open `src/configs/appConfig.ts`
+2. Replace `REPLACE_WITH_YOUR_API_KEY` with your Google Sheets API key
+3. Update the spreadsheet IDs and ranges as needed:
+
+```javascript
+export const googleSheetsConfig = {
+  apiKey: 'YOUR_API_KEY_HERE',
+  
+  sheets: {
+    dashboard: {
+      spreadsheetId: 'YOUR_DASHBOARD_SPREADSHEET_ID',
+      range: 'dashboard!A1:Z1000'
+    },
+    documents: {
+      spreadsheetId: 'YOUR_DOCUMENTS_SPREADSHEET_ID',
+      range: 'documents!A1:Z1000'
+    },
+    tableaux: {
+      spreadsheetId: 'YOUR_TABLEAUX_SPREADSHEET_ID',
+      range: 'tableaux!A1:Z1000'
+    },
+    diagrammes: {
+      spreadsheetId: 'YOUR_DIAGRAMMES_SPREADSHEET_ID',
+      range: 'diagrammes!A1:Z1000'
+    }
+  }
+};
 ```
 
-**Edit a file directly in GitHub**
+### Google Sheets Structure
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Each sheet should have the following columns:
 
-**Use GitHub Codespaces**
+#### Dashboard Sheet
+- id
+- name
+- status
+- progress
+- assignee
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+#### Documents Sheet
+- id
+- name
+- category
+- link
+- type (google-doc, pdf)
 
-## What technologies are used for this project?
+#### Tableaux Sheet
+- id
+- name
+- category
+- link
+- type (google-sheet)
 
-This project is built with .
+#### Diagrammes Sheet
+- id
+- name
+- category
+- link
+- type (html, pdf, google-doc)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Deployment to GitHub Pages
 
-## How can I deploy this project?
+1. Update the `appSettings.deployment.basePath` in `src/configs/appConfig.ts` with your GitHub repository name:
 
-Simply open [Lovable](https://lovable.dev/projects/28adb778-eb00-4f74-9296-f5c683a48e66) and click on Share -> Publish.
+```javascript
+deployment: {
+  basePath: '/your-repo-name',
+  isProduction: process.env.NODE_ENV === 'production'
+}
+```
 
-## I want to use a custom domain - is that possible?
+2. Deploy to GitHub Pages:
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+```
+npm run deploy
+```
+
+## Customization
+
+### Changing the Login Password
+
+1. Open `src/utils/authUtils.ts`
+2. Update the `CORRECT_PASSWORD` constant:
+
+```javascript
+const CORRECT_PASSWORD = 'your-new-password';
+```
+
+### Adding Custom Assets
+
+1. Place your custom logos in the `public` directory
+2. Update the logo reference in `src/pages/LoginPage.tsx`:
+
+```javascript
+<img src="/your-logo.svg" alt="Company Logo" className="h-8" />
+```
+
+### Changing Colors and Theme
+
+1. Modify the CSS variables in `src/index.css` to change the color scheme:
+
+```css
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  /* Update other colors as needed */
+}
+```
+
+## Project Structure
+
+- `src/components/` - Reusable UI components
+- `src/pages/` - Main application pages
+- `src/utils/` - Utility functions and helpers
+- `src/configs/` - Application configuration files
+- `src/hooks/` - Custom React hooks
+- `src/lib/` - Shared library code
+- `public/` - Static assets and images
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

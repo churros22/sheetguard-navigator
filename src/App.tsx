@@ -41,3 +41,23 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <BrowserRouter basename={basePath}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route index element={<Dashboard />} />
+              <Route path="diagrammes" element={<DiagrammesPage />} />
+              <Route path="documents" element={<DocumentsPage />} />
+              <Route path="tableaux" element={<TableauxPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+        <Sonner />
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
+export default App;
