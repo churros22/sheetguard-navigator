@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from "react";
-import { BarChart, CheckCircle, Edit, Loader2, Plus, Save, Trash2, XCircle } from "lucide-react";
+import { CheckCircle, Edit, Loader2, Plus, Save, Trash2, XCircle } from "lucide-react";
+import { BarChart as LucideBarChart } from "lucide-react"; // Rename to avoid conflict
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +32,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  BarChart, // Import from recharts
+  Bar // Import Bar from recharts
 } from "recharts";
 
 interface Task {
@@ -260,7 +264,7 @@ const Dashboard = () => {
               <CardTitle className="text-sm font-medium">
                 Overall Progress
               </CardTitle>
-              <BarChart className="h-4 w-4 text-muted-foreground" />
+              <LucideBarChart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.overall}%</div>
