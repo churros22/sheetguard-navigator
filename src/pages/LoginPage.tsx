@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -9,9 +8,6 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { validatePassword, setAuthState, getAuthState } from "@/utils/authUtils";
 
-// Import framer-motion
-<lov-add-dependency>framer-motion@^10.16.4</lov-add-dependency>
-
 const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,7 +15,6 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   
-  // Check if already authenticated
   useEffect(() => {
     if (getAuthState()) {
       navigate("/");
@@ -31,7 +26,6 @@ const LoginPage = () => {
     setIsLoading(true);
     setError("");
     
-    // Simulate network delay
     setTimeout(() => {
       if (validatePassword(password)) {
         setAuthState(true);
@@ -126,7 +120,6 @@ const LoginPage = () => {
         </motion.div>
       </AnimatePresence>
       
-      {/* Logo placeholder */}
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2">
         <img 
           src="/placeholder.svg" 

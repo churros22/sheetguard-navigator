@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { BarChart, CheckCircle, Edit, Loader2, Plus, Save, Trash2, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -49,7 +48,6 @@ const Dashboard = () => {
   const [tempTask, setTempTask] = useState<Task | null>(null);
   const { toast } = useToast();
   
-  // Fetch data on load
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -75,7 +73,6 @@ const Dashboard = () => {
     fetchData();
   }, [toast]);
   
-  // Calculate progress statistics
   const calculateStats = () => {
     if (tasks.length === 0) return { completed: 0, inProgress: 0, notStarted: 0, overall: 0 };
     
@@ -95,14 +92,12 @@ const Dashboard = () => {
   
   const stats = calculateStats();
   
-  // Prepare chart data
   const chartData = [
     { name: 'Completed', value: stats.completed, fill: '#22c55e' },
     { name: 'In Progress', value: stats.inProgress, fill: '#3b82f6' },
     { name: 'Not Started', value: stats.notStarted, fill: '#ef4444' },
   ];
   
-  // Progress by status chart data
   const progressChartData = [
     { name: 'Tasks', completed: stats.completed, inProgress: stats.inProgress, notStarted: stats.notStarted }
   ];
@@ -118,7 +113,6 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // In a real app, this would update the Google Sheet
       const success = await updateSheetData(
         {
           apiKey: googleSheetsConfig.apiKey,
@@ -129,7 +123,6 @@ const Dashboard = () => {
       );
       
       if (success) {
-        // Update local state
         setTasks(tasks.map(task => task.id === tempTask.id ? tempTask : task));
         toast({
           title: "Task updated",
@@ -161,7 +154,6 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // In a real app, this would update the Google Sheet
       const success = await updateSheetData(
         {
           apiKey: googleSheetsConfig.apiKey,
@@ -172,7 +164,6 @@ const Dashboard = () => {
       );
       
       if (success) {
-        // Update local state
         setTasks(tasks.filter(task => task.id !== id));
         toast({
           title: "Task deleted",
@@ -211,7 +202,6 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // In a real app, this would update the Google Sheet
       const success = await updateSheetData(
         {
           apiKey: googleSheetsConfig.apiKey,
@@ -222,7 +212,6 @@ const Dashboard = () => {
       );
       
       if (success) {
-        // Update local state
         setTasks([...tasks, tempTask]);
         toast({
           title: "Task added",
@@ -265,7 +254,6 @@ const Dashboard = () => {
           </Button>
         </div>
         
-        {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -323,7 +311,6 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Charts */}
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
@@ -367,12 +354,15 @@ const Dashboard = () => {
             <CardContent className="h-[300px]">
               {!loading && (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" />
+                    <Bar dataKey="value" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -385,7 +375,6 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        {/* Tasks Table */}
         <Card>
           <CardHeader>
             <CardTitle>Process Validation Tasks</CardTitle>
